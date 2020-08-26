@@ -367,6 +367,7 @@ namespace lexertk
             case e_mod         : return "%";
             case e_pow         : return "^";
             case e_colon       : return ":";
+            case e_whitespace  : return " ";
             default            : return "UNKNOWN";
          }
       }
