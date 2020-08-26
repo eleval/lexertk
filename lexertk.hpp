@@ -232,7 +232,8 @@ namespace lexertk
          e_rsqrbracket = ']', e_lsqrbracket = '[', e_rcrlbracket = '}',
          e_lcrlbracket = '{', e_comma       = ',', e_add         = '+',
          e_sub         = '-', e_div         = '/', e_mul         = '*',
-         e_mod         = '%', e_pow         = '^', e_colon       = ':'
+         e_mod         = '%', e_pow         = '^', e_colon       = ':',
+         e_whitespace  = ' ',
       };
 
       token()
@@ -263,6 +264,16 @@ namespace lexertk
       {
          type = e_symbol;
          value.assign(begin,end);
+         if (base_begin)
+            position = std::distance(base_begin,begin);
+         return *this;
+      }
+
+      template <typename Iterator>
+      inline token& set_whitespace(const Iterator begin, const Iterator end, const Iterator base_begin = Iterator(0))
+      {
+         type = e_whitespace;
+         value.assign(begin, end);
          if (base_begin)
             position = std::distance(base_begin,begin);
          return *this;
@@ -400,8 +411,9 @@ namespace lexertk
          store_token_itr_ = token_list_.end();
       }
 
-      inline bool process(const std::string& str)
+      inline bool process(const std::string& str, bool skip_whitespace = true)
       {
+         skip_whitespace_ = skip_whitespace;
          base_itr_ = str.data();
          s_itr_    = str.data();
          s_end_    = str.data() + str.size();
@@ -567,8 +579,10 @@ namespace lexertk
 
       inline void scan_token()
       {
-         skip_whitespace();
-
+         if (skip_whitespace_)
+         {
+            skip_whitespace();
+         }
          skip_comments();
 
          if (is_end(s_itr_))
@@ -594,6 +608,10 @@ namespace lexertk
          {
             scan_string();
             return;
+         }
+         else if (details::is_whitespace(*s_itr_))
+         {
+            scan_whitespace();
          }
          else
          {
@@ -835,6 +853,19 @@ namespace lexertk
          return;
       }
 
+      inline void scan_whitespace()
+      {
+         const char* begin = s_itr_;
+         while (!is_end(s_itr_) && details::is_whitespace(*s_itr_))
+         {
+            ++s_itr_;
+         }
+
+         token_t t;
+         t.set_whitespace(begin, s_itr_, base_itr_);
+         token_list_.push_back(t);  
+      }
+
    private:
 
       token_list_t token_list_;
@@ -844,6 +875,7 @@ namespace lexertk
       const char* base_itr_;
       const char* s_itr_;
       const char* s_end_;
+      bool skip_whitespace_;
 
       friend class token_scanner;
       friend class token_modifier;
