@@ -86,7 +86,7 @@ namespace lexertk
 
       inline bool is_letter(const char c)
       {
-         return (('a' <= c) && (c <= 'z')) || (('A' <= c) && (c <= 'Z'));
+         return (('a' <= c) && (c <= 'z')) || (('A' <= c) && (c <= 'Z')) || (c == '_');
       }
 
       inline bool is_digit(const char c)
@@ -129,7 +129,8 @@ namespace lexertk
                 ('_' != c)           &&
                 ('$' != c)           &&
                 ('~' != c)           &&
-                ('\'' != c);
+                ('\'' != c)          &&
+                ('"' != c);
       }
 
       inline bool imatch(const char c1, const char c2)
@@ -604,7 +605,7 @@ namespace lexertk
             scan_number();
             return;
          }
-         else if ('\'' == (*s_itr_))
+         else if ('\'' == (*s_itr_) || '"' == (*s_itr_))
          {
             scan_string();
             return;
@@ -821,7 +822,7 @@ namespace lexertk
             }
             else if (!escaped)
             {
-               if ('\'' == *s_itr_)
+               if ('\'' == *s_itr_ || '"' == *s_itr_)
                   break;
             }
             else if (escaped)
