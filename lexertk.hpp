@@ -81,7 +81,8 @@ namespace lexertk
                 ('{' == c) || ('}' == c) ||
                 ('%' == c) || (':' == c) ||
                 ('?' == c) || ('&' == c) ||
-                ('|' == c) || (';' == c);
+                ('|' == c) || (';' == c) ||
+                ('#' == c);
       }
 
       inline bool is_letter(const char c)
@@ -234,7 +235,7 @@ namespace lexertk
          e_lcrlbracket = '{', e_comma       = ',', e_add         = '+',
          e_sub         = '-', e_div         = '/', e_mul         = '*',
          e_mod         = '%', e_pow         = '^', e_colon       = ':',
-         e_whitespace  = ' ',
+         e_whitespace  = ' ', e_hash        = '#'
       };
 
       token()
@@ -368,6 +369,7 @@ namespace lexertk
             case e_pow         : return "^";
             case e_colon       : return ":";
             case e_whitespace  : return " ";
+            case e_hash        : return "#";
             default            : return "UNKNOWN";
          }
       }
@@ -413,9 +415,10 @@ namespace lexertk
          store_token_itr_ = token_list_.end();
       }
 
-      inline bool process(const std::string& str, bool skip_whitespace = true)
+	   inline bool process(const std::string& str, bool skip_whitespace = true, bool treat_hash_as_comment = true)
       {
          skip_whitespace_ = skip_whitespace;
+         treat_hash_as_comment_ = treat_hash_as_comment;
          base_itr_ = str.data();
          s_itr_    = str.data();
          s_end_    = str.data() + str.size();
@@ -533,14 +536,14 @@ namespace lexertk
       {
          //The following comment styles are supported:
          // 1. // .... \n
-         // 2. #  .... \n
+         // 2. #  .... \n - Only if treat_hash_as_comment_ is set
          // 3. /* .... */
          struct test
          {
-            static inline bool comment_start(const char c0, const char c1, int& mode, int& incr)
+            static inline bool comment_start(const char c0, const char c1, int& mode, int& incr, bool treat_hash_as_comment)
             {
                mode = 0;
-                    if ('#' == c0)    { mode = 1; incr = 1; }
+                    if (treat_hash_as_comment && '#' == c0)    { mode = 1; incr = 1; }
                else if ('/' == c0)
                {
                        if ('/' == c1) { mode = 1; incr = 2; }
@@ -561,7 +564,7 @@ namespace lexertk
 
          if (is_end(s_itr_) || is_end((s_itr_ + 1)))
             return;
-         else if (!test::comment_start(*s_itr_,*(s_itr_ + 1),mode,increment))
+         else if (!test::comment_start(*s_itr_,*(s_itr_ + 1),mode,increment,treat_hash_as_comment_))
             return;
 
          s_itr_ += increment;
@@ -878,6 +881,7 @@ namespace lexertk
       const char* s_itr_;
       const char* s_end_;
       bool skip_whitespace_;
+      bool treat_hash_as_comment_;
 
       friend class token_scanner;
       friend class token_modifier;
@@ -1437,6 +1441,7 @@ namespace lexertk
             add_invalid_set1(lexertk::token::e_mod   );
             add_invalid_set1(lexertk::token::e_pow   );
             add_invalid_set1(lexertk::token::e_colon );
+            add_invalid_set1(lexertk::token::e_hash  );
          }
 
          bool result()
@@ -1505,6 +1510,7 @@ namespace lexertk
             add_invalid(t,lexertk::token::e_mod   );
             add_invalid(t,lexertk::token::e_pow   );
             add_invalid(t,lexertk::token::e_colon );
+            add_invalid(t,lexertk::token::e_hash  );
          }
 
          bool invalid_bracket_check(lexertk::token::token_type base, lexertk::token::token_type t)

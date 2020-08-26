@@ -295,6 +295,23 @@ void example06()
    std::cout << "*********************" << std::endl;
 }
 
+void example07()
+{
+   std::string expression = "#include \"lexertk.h\"";
+
+   lexertk::generator generator;
+
+   if (!generator.process(expression))
+   {
+   std::cout << "Example07 - Failed to lex: " << expression << std::endl;
+   return;
+   }
+
+   std::cout << "***** Example07 *****" << std::endl;
+   lexertk::helper::dump(generator);
+   std::cout << "*********************" << std::endl;
+}
+
 int main()
 {
    example01();
@@ -303,6 +320,7 @@ int main()
    example04();
    example05();
    example06();
+   example07();
 
    return 0;
 }
